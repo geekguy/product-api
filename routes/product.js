@@ -1,7 +1,20 @@
 const express = require("express");
+const jwt = require("jsonwebtoken");
 const router = express.Router();
 
 const Product = require("../models/product");
+
+const verifyJWT = (req, res, next) => {
+  const token = req.headers.authorization;
+  if (!token) {
+    return next();
+  }
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  req.user = decoded;
+  next();
+};
+
+router.use(verifyJWT);
 
 router.get("/", async (req, res) => {
   const products = await Product.find();
@@ -19,9 +32,15 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const product = req.body;
-  const dbProduct = await Product.create(product);
-  res.send(dbProduct);
+  const user = req.user;
+  console.log({ user });
+  if (user && user.role === "ADMIN") {
+    const product = req.body;
+    const dbProduct = await Product.create(product);
+    res.send(dbProduct);
+  } else {
+    res.status(401).send({ error: "Not authorized - test!" });
+  }
 });
 
 // router.put("/:id", (req, res) => {
