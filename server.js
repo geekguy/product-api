@@ -1,12 +1,17 @@
 require("dotenv").config();
 const express = require("express");
+const mongoose = require("mongoose");
 const app = express();
 const PORT = process.env.PORT;
 
 const productRouter = require("./routes/product");
 
+mongoose.connect(process.env.MONGO_URL).then(() => {
+  console.log("MongoDB Connected");
+});
+
 app.use(express.json());
-app.use(productRouter);
+app.use("/products", productRouter);
 
 const logger = (req, res, next) => {
   console.log(`Received ${req.method} request on ${req.url}`);
